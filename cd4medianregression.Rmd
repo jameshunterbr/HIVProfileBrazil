@@ -1,0 +1,19 @@
+---
+title: "Increase in CD4 over period"
+author: "James Hunter"
+date: "May 22, 2015"
+output: pdf_document
+---
+
+We refer the reader to the cd4+ data in Supplemental Table #2. However, here is a linear regression to show the significance of the increase.
+
+Read in median CD4+ count from Supp Table 1
+```{r read}
+cd4median <- read.csv(file = "medcd4.csv", header = TRUE)
+cd4fit <- lm(cd4 ~ year, data = cd4median)
+summary(cd4fit)
+plot(cd4fit)
+require(car)
+qqPlot(cd4fit)
+```
+

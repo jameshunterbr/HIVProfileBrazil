@@ -1,0 +1,18 @@
+---
+title: "Undetectable Viral Load"
+author: "James Hunter"
+date: "May 22, 2015"
+output: pdf_document
+---
+
+Determine regression and how good a fit for beta for % of patients with undetectable viral loads
+
+```{r fit1}
+load("undetect.Rda")
+fit <- lm(undetect$pct ~ undetect$year)
+summary(fit)
+library(car)
+plot(fit)
+qqPlot(fit)
+```
+
