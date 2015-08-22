@@ -1,0 +1,30 @@
+---
+title: "Import "Junção" Database"
+author: "James Hunter"
+date: "August 22, 2015"
+output: html_document
+---
+
+Load Libraries
+--------------
+```{r libs}
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(data.table))
+```
+
+In Excel, tranlate each sheet to a csv file as XLConnect can't build a large enough Java heap. Then read them in 
+
+Read in Plan 1 and Plan 2
+-------------------------
+```{r load}
+plan1 <- read.csv("juncao_plan1.csv")
+plan2 <- read.csv("juncao_plan2.csv")
+
+## convert plan1 and plan2 to dplyr data_frames
+plan1 <- as_data_frame(plan1)
+plan2 <- as_data_frame(plan2)
+save(plan1, plan2, file = "juncao_data.RData")
+```
+
+
+
