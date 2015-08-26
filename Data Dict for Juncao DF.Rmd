@@ -1,0 +1,22 @@
+---
+title: "Notes from Anderson on Juncao Data Frame"
+author: "James Hunter"
+date: "August 24, 2015"
+output: pdf_document
+---
+
+Caro James,
+Segue o dicionário de dados da planilha:
+
+- A coluna de subtipo é a coluna F. Caso apareça uma ? nessa coluna significa que a ferramenta não conseguiu subtipar. 
+- Da coluna G a AD são as drogas utilizadas
+- Da coluna AF a  DZ são as mutações da Protease. Os número no cabeçalho são exatamente a posição onde ocorre a mutação.
+- Da coluna EB a  QX são as mutações da Transcriptase Reversa. Os número no cabeçalho são exatamente a posição onde ocorre a mutação.
+- A coluna QY (Countings) serve somente para separar as mutações das classes. 
+- Da coluna QZ a RL são as classes de mutações.
+
+Lembro-me quando fizemos as analises utilizamos as classes de stanford pois é o padrão ouro. Não usamos o brasileiro.
+
+Me parece que o Ricardo precisa responder somente as classes ITRN, ITRNN e IP. Ou seja. NNRTI_Stanford, NRTI_Stanford, PI_Stanford. Colunas RB, RD e RG respectivamente. Os números que aparecem como resultados nessas colunas são a quantidade de mutação encontrada em cada classe. Ou seja, se for diferente de zero significa que existe resistência a classe. Por exemplo, a primeira sequencia possui 01 mutação para NNRTI_Stanford,  0 mutação para NRTI_Stanford e 01 para PI_Stanford. Ou seja, possui resistência para 02 classes.
+
+Ou seja, para responder a pergunta do Ricardo tem que levar em consideração a coluna de subtipos (F) e as colunas de classes (RB, RD e RG).
