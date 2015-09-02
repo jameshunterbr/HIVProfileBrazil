@@ -1,0 +1,76 @@
+---
+title: "Clade v Classes"
+author: "James Hunter"
+date: "September 2, 2015"
+output: pdf_document
+---
+
+This uses the "int resist miami.xlsx" dataset. This data is summarized without formulas and without specific references to how it was summarized onto this dataset. The spreadsheet was prepared in 2009.
+
+Read the data into R
+```{r}
+suppressPackageStartupMessages(library(RColorBrewer))
+cladeclass <- t(read.csv("clade_class_excel.csv", header = FALSE)) 
+# transform to put clades as rows
+# Remove NT, Total rows
+cladeclass <- cladeclass[-(4:5),] 
+cladeclass <- 100 * cladeclass # Turn proportions into percentages
+colnames(cladeclass) <- c("Zero Class", "One Class", "Two Class", "Three Class")
+barplot(cladeclass, beside = TRUE,
+                col = brewer.pal(3, "Set1"),
+                ylim = c(0, 60),
+                xlab = "Number of Classes with Resistance",
+                ylab = "% of Cases within Clade Showing Resistance",
+                main = "Clades Showing Classes of Resistance",
+                legend = c("Clade B", "Clade C", "Clade F"))
+rownames(cladeclass) <- c("Clade B", "Clade C", "Clade F")
+cladeclass
+```
+
+This is indeed the original graph.
+
+# Clades by retroviral classes comparison
+With Ester Sabino's spreadsheet, test differences among 3 class and 2 class by clade
+```{r cladestest}
+clades = factor(c("Clade B", "Clade C", "Clade F"))
+# 3 class resistance-- read in 3 class file
+cl3bcf <- read.csv("cl3byclade.csv", header = FALSE, stringsAsFactors = FALSE)
+years <- c(as.character(2003:2009), "total")
+clades <- c("B", "C", "F")
+colnames(cl3bcf) <- years
+rownames(cl3bcf) <- clades
+cl3bcf
+cladeb3 <- cl3bcf[1,1:7]
+cladec3 <- cl3bcf[2,1:7]
+t.test(cladeb3, cladec3)
+# 2 class resistance
+cl2bcf <- read.csv("cl2byclade.csv", header = FALSE, stringsAsFactors = FALSE)
+
+colnames(cl2bcf) <- years
+rownames(cl2bcf) <- clades
+cl2bcf
+#Difference between B and F
+cladeb2 <- cl2bcf[1,1:7]
+cladef2 <- cl2bcf[3,1:7]
+t.test(cladeb2, cladef2)
+# 1 class resistance
+cl1bcf <- read.csv("cl1byclade.csv", header = FALSE, stringsAsFactors = FALSE)
+colnames(cl1bcf) <- years
+rownames(cl1bcf) <- clades
+cl1bcf
+cladec1 <- cl1bcf[2,1:7]
+cladef1 <- cl1bcf[3,1:7]
+t.test(cladec1, cladef1)
+# 0 class resistance
+cl0bcf <- read.csv("cl0byclade.csv", header = FALSE, stringsAsFactors = FALSE)
+colnames(cl0bcf) <- years
+rownames(cl0bcf) <- clades
+cl0bcf
+#Difference between C and F
+cladec0 <- cl0bcf[2,1:7]
+cladef0 <- cl0bcf[3,1:7]
+t.test(cladec0, cladef0)
+
+
+```
+

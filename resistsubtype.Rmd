@@ -1,0 +1,191 @@
+---
+title: "Resist Subtype"
+author: "James Hunter"
+date: "August 27, 2015"
+output: pdf_document
+---
+This is a copy of resistsubtype.R from April 2014
+The data come from resistsubtipo.xlsx, one of the original files. This file is obviously derived from Anderson's original data, with the resistances being converted into Sim/Não categories. At the end of this, I will replicate the bar graph from "load Juncao db" file from earlier this week.
+
+Legend:
+c2 = 2 class resistance
+c3 = 3 class resistance
+individual class names followed by "yn" indicate that the variables have been classified as boolean - resistance exists or not in a patient.
+
+```{r }
+## Set up R data frame based on resistsubtipo.csv
+resistst <- read.csv("resistsubtipo.csv", header = TRUE, 
+                     stringsAsFactors = FALSE,
+                     na.strings = c("*", "?"))
+## Set up resistance types as 1/0
+resistst$trnyn <- ifelse(resistst$trn > 0, 1, 0)
+resistst$trnnyn <- ifelse(resistst$trnn > 0, 1, 0)
+resistst$ipyn <- ifelse(resistst$ip > 0, 1, 0)
+
+
+## Measure 3 class resistance
+# using numeric variables
+resistst$c3 <- ifelse(resistst$trn > 0 & resistst$trnn > 0
+                      & resistst$ip > 0, 1, 0)
+## measure 2 class resistance
+# using numeric variables
+resistst$c2 <- ifelse(with(resistst,
+                           ((trn > 0) + (trnn > 0) + (ip >0)) == 2),
+                           1, 0)
+## Create names for state of resistances
+resNames <- c("Absent", "Present")
+
+## Work only on complete cases (1009 with missing data, 
+## of which 994 have stBlast = "BF")
+
+resistcomp <- resistst[complete.cases(resistst),]
+
+#resiststn <- resistst
+#resiststn$c3 <- ifelse(resiststn$c3 == 1, "Present", "Absent")
+#resiststn$c2 <- ifelse(resiststn$c2 == 1, "Present", "Absent")
+## Create tables resistcomp data frame
+## Whole data frame
+with(resistcomp, table(ano, reg))
+with(resistcomp, table(ano, st))
+resc3 <- with(resistcomp, table(ano, c3))
+resc3
+resc2 <- with(resistcomp, table(ano, c2))
+resc2
+restrn <- with(resistcomp, table(ano, trnyn))
+restrn
+restrnn <- with(resistcomp, table(ano, trnnyn))
+restrnn
+resip <- with(resistcomp, table(ano, ipyn))
+resip
+with(resistcomp, table(st, c3))
+with(resistcomp, table(st, c2))
+
+## prepare %'s of c2 for insertion in resist - only years 2001 - 2007
+resc2prop <- prop.table(resc2, margin = 1)
+resc2prop
+
+require(gmodels)
+CrossTable(resistcomp$ano, resistcomp$c2, prop.chisq = FALSE, format = "SPSS")
+CrossTable(resistcomp$ano, resistcomp$c3, prop.chisq = FALSE, format = "SPSS")
+
+## axis data with year and n
+years <- min(resistcomp$ano) : max(resistcomp$ano)
+n <- rep(NA, length(years))
+for (i in 1 :length(years)){
+   n[i] <- resip[i,1] + resip[i,2]
+}
+tickvec2 <- rep(NA, length(years))
+for (i in 1:length(years)) {
+   tickvec2[i] <- paste(years[i], 
+                        "\n(",n[i],")", sep = "")
+}
+
+## Mount data frame with final proportion data
+tables <- c("restrn", "restrnn", "resip", "resc2", "resc3")
+resistprop <- as.data.frame(years)
+resistprop$trn <-  100 * prop.table(restrn, margin = 1)[,2]
+resistprop$trnn <-  100 * prop.table(restrnn, margin = 1)[,2]
+resistprop$ip <-  100 * prop.table(resip, margin = 1)[,2]
+resistprop$c2 <-  100 * prop.table(resc2, margin = 1)[,2]
+resistprop$c3 <-  100 * prop.table(resc3, margin = 1)[,2]
+
+## Graph of resistances
+plot(resistprop$trn ~ resistprop$years, type = "l",
+     lwd = 2, xaxt = "n", ylim = c(0, 60),
+     main = "Percentage of Drug Resistance by Year\n2001 - 2007",
+     xlab = "Year(n)",
+     ylab = "Percentage ")
+lines(resistprop$years, resistprop$trnn, lwd = 2, lty = 2)
+lines(resistprop$years, resistprop$ip, lwd = 2, lty = 3)
+lines(resistprop$years, resistprop$c2, lwd = 2, lty = 4)
+lines(resistprop$years, resistprop$c3, lwd = 2, lty = 5)
+legend("top", 
+       legend = c("NRTI", "NNRTI", "PI", "2 class", "3 class"),
+       lwd = 2,
+       lty = seq(1,5), cex = 0.8, 
+       ncol = 5)
+axis(1, at = resistprop$years, labels = tickvec2)
+grid(col = "darkgrey")
+```
+
+Bar chart equal to earlier bar chart with data from this dataset - comparison of percentage of resistance with subtype
+
+Measure class resistances in same manner as Anderson data
+
+```{r classresist}
+suppressPackageStartupMessages(library(dplyr))
+resistcomp <- mutate(resistcomp, numclasses = 
+                      (trnyn >0) + (trnnyn > 0) + (ipyn > 0))
+resistcomp <- mutate(resistcomp, noclass = numclasses == 0)
+resistcomp <- mutate(resistcomp, oneclass = numclasses == 1)
+resistcomp <- mutate(resistcomp, twoclass = numclasses == 2)
+resistcomp <- mutate(resistcomp, threeclass = numclasses == 3)
+table(resistcomp$numclasses) #all clades
+# get reduced data set for BCF only
+resistbcf <- filter(resistcomp, st %in% c("B", "C", "F"))
+resistbcf$st <- factor(resistbcf$st, levels = c("B", "C", "F"))
+subtype_table <- table(resistbcf$st)
+resistbcftable <- table(resistbcf$st, factor(resistbcf$numclasses))
+resistbcfprop <- 100 * prop.table(resistbcftable, 1) # in pct terms
+resistbcfprop
+```
+
+```{r histos}
+library(RColorBrewer)
+bcfresist <- barplot(resistbcfprop, beside = TRUE,
+                col = brewer.pal(3, "Set1"),
+                ylim = c(0, 60),
+                xlab = "Number of Classes with Resistance",
+                ylab = "% of Cases within Clade Showing Resistance",
+                main = "Clades Showing Classes of Resistance",
+                legend = c("Clade B", "Clade C", "Clade F"))
+grid(col = "black")
+
+```
+
+Now, the original graph:
+
+![original](drug class and resistance.pptx.pdf)
+
+Also, against the graph from earlier in the week (Anderson's spreadsheets):
+
+![Anderson data](Anderson resist clade data.tiff)
+
+Comparison of Anderson's Stanford Clade data with the Brazilian clade assignment.
+
+```{r cladecomp}
+load("juncao_data.RData") # load the Anderson data
+# from the original plan2 data, get the three subtype classifications
+subtypes <- data_frame(stA_Hmmer = plan2$subtipo_Hmmer,
+                       stA_Blast = plan2$subtipo_blast,
+                       stA_st = plan2$subtipo)
+# get reduced set for B,C,F only
+subtypes_bcf <- filter(subtypes, stA_st %in% c("B", "C", "F") & 
+                          stA_Hmmer %in% c("B", "C", "F") & 
+                          stA_Blast %in% c("B", "C", "F"))
+subtypes_bcf$stA_Blast <- factor(subtypes_bcf$stA_Blast, levels = c("B", "C", "F"))
+subtypes_bcf$stA_st <- factor(subtypes_bcf$stA_st, levels = c("B", "C", "F"))
+subtypes_bcf$stA_Hmmer <- factor(subtypes_bcf$stA_Hmmer, levels = c("B", "C", "F"))
+```
+Table of proportions of clades in Anderson spreadsheets
+```{r andersonclade}
+stAtable <- table(subtypes_bcf$stA_st)
+stAbcfprop <- 100 * stAtable/nrow(subtypes_bcf) # in pct terms
+round(stAbcfprop,3)
+```
+
+Table of proportions of clades in resistsubtipo spreadsheet
+
+```{r resisttipo}
+resistbcf_table <- table(resistbcf$st)
+resistbcf_prop <- 100 * resistbcf_table/nrow(resistbcf)
+round(resistbcf_prop,3)
+t.test(resistbcf_prop, stAbcfprop)
+
+```
+
+T-test shows no difference in distributions of B, C, and F clades coming from the two sets of data. 
+
+Conclusion
+----------
+Since we have been working consistently with the dataset shown in this report (resistcomp), I would suggest continuing with this and adding this version of the bar chart to the paper. It is consistent with the other results on clades and resistance we have been reporting as suggested by the t-test above. Given everyone's lack of familiarity with the data sets we received last week, I would suggest we focus on these we have been working with more directly.
